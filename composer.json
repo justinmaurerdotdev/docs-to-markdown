@@ -1,0 +1,28 @@
+{
+    "name": "justinmaurerdotdev/docs-to-markdown",
+    "description": "A website scraper that converts HTML to Markdown",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Justin Maurer",
+            "email": "justin@justinmaurer.dev"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "guzzlehttp/guzzle": "^7.0",
+        "league/html-to-markdown": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "DocsToMarkdown\\": "src/"
+        }
+    },
+    "bin": [
+        "bin/docs-to-markdown"
+    ],
+    "require-dev": {
+        "symfony/console": "^5.0"
+    }
+}

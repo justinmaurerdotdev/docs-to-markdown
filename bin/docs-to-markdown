@@ -1,0 +1,86 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Find and require the autoloader
+$possibleFiles = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+];
+
+$file = null;
+foreach ($possibleFiles as $possibleFile) {
+    if (file_exists($possibleFile)) {
+        $file = $possibleFile;
+        break;
+    }
+}
+
+if (null === $file) {
+    throw new RuntimeException('Unable to locate autoload.php file.');
+}
+
+require_once $file;
+
+use DocsToMarkdown\Scraper\PageScraper;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class ScraperCommand extends Command
+{
+    protected function configure()
+    {
+        $this
+            ->setName('scrape')
+            ->setDescription('Scrape a website and convert it to Markdown')
+            ->addArgument('url', InputArgument::REQUIRED, 'The URL to start crawling from')
+            ->addOption('output-dir', 'o', InputOption::VALUE_REQUIRED, 'Directory to save markdown files', 'output')
+            ->addOption('max-pages', 'm', InputOption::VALUE_REQUIRED, 'Maximum number of pages to crawl', 100)
+            ->addOption('child-only', 'c', InputOption::VALUE_NONE, 'Only crawl child pages of the URL');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $url = $input->getArgument('url');
+        $outputDir = $input->getOption('output-dir');
+        $maxPages = (int) $input->getOption('max-pages');
+        $childOnly = $input->getOption('child-only');
+
+        $output->writeln([
+            'Docs to Markdown Scraper',
+            '======================',
+            '',
+        ]);
+
+        $output->writeln("Starting to crawl: $url");
+        $output->writeln("Output directory: $outputDir");
+        $output->writeln("Max pages: $maxPages");
+        $output->writeln("Child pages only: " . ($childOnly ? 'Yes' : 'No'));
+        $output->writeln('');
+
+        try {
+            $scraper = new PageScraper($outputDir);
+            $scraper->crawl($url, $maxPages, $childOnly);
+            
+            $output->writeln('');
+            $output->writeln('Crawling completed successfully!');
+            
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $output->writeln('<error>Error: ' . $e->getMessage() . '</error>');
+            
+            return Command::FAILURE;
+        }
+    }
+}
+
+// Create the application
+$application = new Application('Docs to Markdown', '1.0.0');
+$application->add(new ScraperCommand());
+$application->setDefaultCommand('scrape', true);
+$application->run();
